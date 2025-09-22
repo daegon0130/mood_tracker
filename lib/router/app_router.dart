@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../providers/firebase_providers.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
-import '../screens/home/home_screen.dart';
-import '../screens/profile/profile_screen.dart';
+import '../screens/home/main_screen.dart';
+import '../screens/post/post_screen.dart';
 import '../screens/splash/splash_screen.dart';
 
 // Router configuration
@@ -15,27 +15,46 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
-      final isAuthLoading = authState.isLoading;
-      final isLoggedIn = authState.asData?.value != null;
+      final authAsync = authState;
       final isSplash = state.matchedLocation == '/splash';
       final isAuth = state.matchedLocation.startsWith('/auth');
 
-      // Show splash while auth state is loading
-      if (isAuthLoading) {
-        return '/splash';
-      }
+      return authAsync.when(
+        // 로딩 중일 때 - 한정된 시간만 대기
+        loading: () {
+          // 스플래시 화면에서만 로딩 허용, 다른 곳에서는 즉시 로그인으로
+          if (isSplash) {
+            return null; // 스플래시 화면 유지 (타임아웃으로 처리됨)
+          }
+          return '/auth/login';
+        },
+        // 에러 발생 시
+        error: (error, stack) {
+          // 에러 발생 시 항상 로그인 화면으로
+          if (isAuth) {
+            return null; // 이미 인증 화면에 있으면 유지
+          }
+          return '/auth/login';
+        },
+        // 데이터 로드 완료 시
+        data: (user) {
+          final isLoggedIn = user != null;
 
-      // If not logged in and not on auth pages, redirect to login
-      if (!isLoggedIn && !isAuth && !isSplash) {
-        return '/auth/login';
-      }
+          // 로그인되지 않았고 인증 화면이 아니라면 로그인으로 이동
+          if (!isLoggedIn && !isAuth) {
+            return '/auth/login';
+          }
 
-      // If logged in and on auth pages, redirect to home
-      if (isLoggedIn && (isAuth || isSplash)) {
-        return '/home';
-      }
+          // 로그인되었고 스플래시나 인증 화면에 있다면 홈으로 이동
+          if (isLoggedIn && (isAuth || isSplash)) {
+            print('로그인됨, 홈 화면으로 이동');
+            return '/home';
+          }
 
-      return null; // No redirect needed
+          print('현재 위치 유지');
+          return null; // 리디렉션 불필요
+        },
+      );
     },
     routes: [
       // Splash Screen
@@ -65,12 +84,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         name: 'home',
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const MainScreen(),
       ),
       GoRoute(
-        path: '/profile',
-        name: 'profile',
-        builder: (context, state) => const ProfileScreen(),
+        path: '/post',
+        name: 'post',
+        builder: (context, state) => const PostScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

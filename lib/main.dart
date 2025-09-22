@@ -8,34 +8,32 @@ import 'router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
   runApp(
     const ProviderScope(
-      child: MovieTrackerApp(),
+      child: MoodTrackerApp(),
     ),
   );
 }
 
-class MovieTrackerApp extends ConsumerWidget {
-  const MovieTrackerApp({super.key});
+class MoodTrackerApp extends ConsumerWidget {
+  const MoodTrackerApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(app_providers.themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Movie Tracker',
+      title: 'Mood Tracker',
 
       // Theme configuration
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: Colors.purple,
           brightness: Brightness.light,
         ),
         textTheme: GoogleFonts.interTextTheme(),
@@ -43,7 +41,7 @@ class MovieTrackerApp extends ConsumerWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: Colors.purple,
           brightness: Brightness.dark,
         ),
         textTheme: GoogleFonts.interTextTheme(
